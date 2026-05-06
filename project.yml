@@ -1,0 +1,51 @@
+name: TimeToMeet
+options:
+  deploymentTarget:
+    macOS: "13.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+targets:
+  TimeToMeet:
+    type: application
+    platform: macOS
+    deploymentTarget: "13.0"
+    sources:
+      - path: Sources/TimeToMeet
+    settings:
+      base:
+        PRODUCT_NAME: "Time to Meet"
+        PRODUCT_BUNDLE_IDENTIFIER: com.alluxi.timetomeet
+        INFOPLIST_FILE: Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Resources/TimeToMeet.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_APP_SANDBOX: YES
+        GENERATE_INFOPLIST_FILE: NO
+    preBuildScripts:
+      - name: Generate AppIcon
+        script: |
+          set -e
+          ICONSET="${DERIVED_FILE_DIR}/AppIcon.iconset"
+          rm -rf "$ICONSET"; mkdir -p "$ICONSET"
+          SRC="$ICONSET/_source.png"
+          /usr/bin/swift "${SRCROOT}/tools/make_icon.swift" "$SRC" >/dev/null
+          for pair in 16:icon_16x16.png 32:icon_16x16@2x.png 32:icon_32x32.png 64:icon_32x32@2x.png \
+                      128:icon_128x128.png 256:icon_128x128@2x.png 256:icon_256x256.png \
+                      512:icon_256x256@2x.png 512:icon_512x512.png 1024:icon_512x512@2x.png; do
+              sz="${pair%%:*}"; name="${pair##*:}"
+              sips -z "$sz" "$sz" "$SRC" --out "$ICONSET/$name" >/dev/null
+          done
+          rm "$SRC"
+          mkdir -p "${SRCROOT}/Resources"
+          iconutil -c icns "$ICONSET" -o "${SRCROOT}/Resources/AppIcon.icns"
+        outputFiles:
+          - $(SRCROOT)/Resources/AppIcon.icns
+    resources:
+      - path: Resources/AppIcon.icns
+        optional: true
