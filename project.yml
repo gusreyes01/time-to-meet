@@ -21,6 +21,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: "Time to Meet"
+        EXECUTABLE_NAME: TimeToMeet
         PRODUCT_BUNDLE_IDENTIFIER: com.alluxi.timetomeet
         INFOPLIST_FILE: Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: Resources/TimeToMeet.entitlements
