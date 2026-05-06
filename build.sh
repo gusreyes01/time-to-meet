@@ -17,24 +17,8 @@ if [ ! -f "$BIN_PATH" ]; then
 fi
 
 echo "→ Generating app icon"
-ICONSET="build/AppIcon.iconset"
-rm -rf "$ICONSET"
-mkdir -p "$ICONSET"
-SRC="$ICONSET/_source.png"
-swift tools/make_icon.swift "$SRC" >/dev/null
-
-gen() { sips -z "$2" "$2" "$SRC" --out "$ICONSET/$1" >/dev/null; }
-gen icon_16x16.png       16
-gen icon_16x16@2x.png    32
-gen icon_32x32.png       32
-gen icon_32x32@2x.png    64
-gen icon_128x128.png     128
-gen icon_128x128@2x.png  256
-gen icon_256x256.png     256
-gen icon_256x256@2x.png  512
-gen icon_512x512.png     512
-gen icon_512x512@2x.png  1024
-rm "$SRC"
+chmod +x tools/make_icns.sh
+tools/make_icns.sh build/AppIcon.icns >/dev/null
 
 echo "→ Stopping any running instance (graceful)"
 osascript -e 'tell application "Time to Meet" to quit' 2>/dev/null || true
@@ -51,8 +35,7 @@ mkdir -p "$APP_DIR/Contents/MacOS"
 mkdir -p "$APP_DIR/Contents/Resources"
 cp "$BIN_PATH" "$APP_DIR/Contents/MacOS/TimeToMeet"
 cp Resources/Info.plist "$APP_DIR/Contents/Info.plist"
-iconutil -c icns "$ICONSET" -o "$APP_DIR/Contents/Resources/AppIcon.icns"
-rm -rf "$ICONSET"
+cp build/AppIcon.icns "$APP_DIR/Contents/Resources/AppIcon.icns"
 
 echo "→ Ad-hoc signing"
 codesign --force --deep --sign - "$APP_DIR" >/dev/null

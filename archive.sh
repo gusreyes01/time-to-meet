@@ -7,6 +7,10 @@ TEAM_ID="${TEAM_ID:-T85644NQ7L}"
 ARCHIVE_PATH="build/TimeToMeet.xcarchive"
 EXPORT_PATH="build/TimeToMeet-export"
 
+echo "→ Generating AppIcon.icns"
+chmod +x tools/make_icns.sh
+tools/make_icns.sh Resources/AppIcon.icns >/dev/null
+
 echo "→ Regenerating Xcode project from project.yml"
 xcodegen generate >/dev/null
 
