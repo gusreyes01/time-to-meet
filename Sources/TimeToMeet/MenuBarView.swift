@@ -140,18 +140,17 @@ private struct MeetingRow: View {
     @EnvironmentObject var state: AppState
 
     var body: some View {
-        let skipped = state.isSkipped(meeting)
+        let selected = state.isSelected(meeting)
         let alertOn = Binding<Bool>(
-            get: { !state.isSkipped(meeting) },
-            set: { state.setSkipped(meeting, !$0) }
+            get: { state.isSelected(meeting) },
+            set: { state.setSelected(meeting, $0) }
         )
 
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 1) {
                 Text(meeting.title)
                     .lineLimit(1)
-                    .strikethrough(skipped, color: .secondary)
-                    .foregroundStyle(skipped ? .secondary : .primary)
+                    .foregroundStyle(selected ? .primary : .secondary)
                 Text(dateLabel(meeting.startDate))
                     .font(.caption)
                     .foregroundStyle(.secondary)

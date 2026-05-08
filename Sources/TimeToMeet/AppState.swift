@@ -33,7 +33,10 @@ final class AppState: ObservableObject {
         }
     }
 
-    @Published private var skippedIDs: Set<String> = []
+    /// Set of meeting series IDs the user has explicitly opted in for alerts.
+    /// Default behavior: meetings start unchecked (no alert) until the user
+    /// ticks the box in the menu bar list.
+    @Published private var selectedSeriesIDs: Set<String> = []
     @Published var displayLimit: Int = 10
 
     static let pageSize: Int = 10
@@ -47,7 +50,7 @@ final class AppState: ObservableObject {
     private enum Keys {
         static let leadTime = "leadTimeMinutes"
         static let enabled = "alertsEnabled"
-        static let skippedIDs = "skippedMeetingIDs"
+        static let selectedSeriesIDs = "selectedMeetingSeries"
     }
 
     init() {
@@ -55,8 +58,8 @@ final class AppState: ObservableObject {
         self.leadTimeMinutes = storedLead ?? 3
         let storedEnabled = UserDefaults.standard.object(forKey: Keys.enabled) as? Bool
         self.enabled = storedEnabled ?? true
-        let storedSkipped = UserDefaults.standard.array(forKey: Keys.skippedIDs) as? [String] ?? []
-        self.skippedIDs = Set(storedSkipped)
+        let storedSelected = UserDefaults.standard.array(forKey: Keys.selectedSeriesIDs) as? [String] ?? []
+        self.selectedSeriesIDs = Set(storedSelected)
 
         Task { await requestAccessAndLoad() }
         startTimer()
@@ -68,21 +71,21 @@ final class AppState: ObservableObject {
 
     var nextAlertableMeeting: MeetingInfo? {
         meetings.first {
-            $0.startDate.timeIntervalSince(now) > -60 && !skippedIDs.contains($0.seriesID)
+            $0.startDate.timeIntervalSince(now) > -60 && selectedSeriesIDs.contains($0.seriesID)
         }
     }
 
-    func isSkipped(_ meeting: MeetingInfo) -> Bool {
-        skippedIDs.contains(meeting.seriesID)
+    func isSelected(_ meeting: MeetingInfo) -> Bool {
+        selectedSeriesIDs.contains(meeting.seriesID)
     }
 
-    func setSkipped(_ meeting: MeetingInfo, _ skip: Bool) {
-        if skip {
-            skippedIDs.insert(meeting.seriesID)
+    func setSelected(_ meeting: MeetingInfo, _ selected: Bool) {
+        if selected {
+            selectedSeriesIDs.insert(meeting.seriesID)
         } else {
-            skippedIDs.remove(meeting.seriesID)
+            selectedSeriesIDs.remove(meeting.seriesID)
         }
-        UserDefaults.standard.set(Array(skippedIDs), forKey: Keys.skippedIDs)
+        UserDefaults.standard.set(Array(selectedSeriesIDs), forKey: Keys.selectedSeriesIDs)
         UserDefaults.standard.synchronize()
         evaluateAlert()
     }
@@ -185,12 +188,23 @@ final class AppState: ObservableObject {
             return
         }
 
+        // Don't pop the overlay if the user is already on a call or screen
+        // sharing — it would interrupt them or, worse, be visible to viewers.
+        // If an overlay was already showing when sharing started, hide it.
+        if CallDetector.shouldSuppressAlert {
+            if !alertingMeetings.isEmpty {
+                alertingMeetings = []
+                overlayController.hide()
+            }
+            return
+        }
+
         let leadSecs = TimeInterval(leadTimeMinutes * 60)
         let inWindow = meetings.filter { m in
             let secs = m.startDate.timeIntervalSince(now)
             return secs <= leadSecs
                 && secs > -60
-                && !skippedIDs.contains(m.seriesID)
+                && selectedSeriesIDs.contains(m.seriesID)
                 && !dismissedIDs.contains(m.id)
         }
 
