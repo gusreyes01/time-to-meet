@@ -188,9 +188,9 @@ final class AppState: ObservableObject {
             return
         }
 
-        // Don't pop the overlay if the user is already on a call or screen
-        // sharing — it would interrupt them or, worse, be visible to viewers.
-        // If an overlay was already showing when sharing started, hide it.
+        // Don't pop the overlay while the mic or camera is live — the user is on
+        // a call and the overlay would interrupt them or be visible to viewers.
+        // If an overlay was already showing when the call started, hide it.
         if CallDetector.shouldSuppressAlert {
             if !alertingMeetings.isEmpty {
                 alertingMeetings = []
