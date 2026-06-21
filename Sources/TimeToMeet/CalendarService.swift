@@ -34,24 +34,48 @@ final class CalendarService {
             calendars: calendars
         )
         let events = store.events(matching: predicate)
-        return events
             .filter { !$0.isAllDay }
             .filter { $0.endDate > now }
-            .filter { ($0.status != .canceled) }
+            .filter { $0.status != .canceled }
             .filter { isUserParticipating(in: $0) }
             .sorted { $0.startDate < $1.startDate }
-            .map { e in
-                let eid = e.eventIdentifier ?? UUID().uuidString
-                return MeetingInfo(
-                    id: "\(eid)-\(Int(e.startDate.timeIntervalSince1970))",
-                    seriesID: eid,
-                    title: e.title ?? "Untitled",
-                    startDate: e.startDate,
-                    endDate: e.endDate,
-                    joinURL: MeetingLinkExtractor.extract(from: e),
-                    location: e.location
-                )
+
+        return deduplicated(events.map(makeMeetingInfo))
+    }
+
+    private func makeMeetingInfo(_ e: EKEvent) -> MeetingInfo {
+        // The external (iCalendar UID) identifier is shared across calendars and
+        // accounts for the same meeting, so it collapses copies that live on more
+        // than one connected calendar. Fall back to the per-store event id.
+        let seriesID = e.calendarItemExternalIdentifier ?? e.eventIdentifier ?? UUID().uuidString
+        return MeetingInfo(
+            id: "\(seriesID)-\(Int(e.startDate.timeIntervalSince1970))",
+            seriesID: seriesID,
+            title: e.title ?? "Untitled",
+            startDate: e.startDate,
+            endDate: e.endDate,
+            joinURL: MeetingLinkExtractor.extract(from: e),
+            location: e.location
+        )
+    }
+
+    /// Collapses the same meeting appearing on multiple connected calendars into
+    /// a single entry. Same UID + same start time is treated as one occurrence;
+    /// when copies differ, we keep the one that carries a join link.
+    private func deduplicated(_ meetings: [MeetingInfo]) -> [MeetingInfo] {
+        var indexByID: [String: Int] = [:]
+        var result: [MeetingInfo] = []
+        for m in meetings {
+            if let i = indexByID[m.id] {
+                if result[i].joinURL == nil, m.joinURL != nil {
+                    result[i] = m
+                }
+            } else {
+                indexByID[m.id] = result.count
+                result.append(m)
             }
+        }
+        return result
     }
 
     /// Whether the current user is actually a participant in this event, as

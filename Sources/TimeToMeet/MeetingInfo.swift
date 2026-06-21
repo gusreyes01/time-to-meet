@@ -1,9 +1,11 @@
 import Foundation
 
 struct MeetingInfo: Hashable, Identifiable {
-    /// Unique per occurrence (eventID + start). Used for SwiftUI identity and per-occurrence dismiss tracking.
+    /// Unique per occurrence (shared meeting UID + start). Used for SwiftUI identity,
+    /// dedup across calendars, and per-occurrence dismiss tracking.
     let id: String
-    /// Stable across all occurrences of a recurring series. Used for the user's alert on/off preference.
+    /// Stable across all occurrences of a series and across calendars holding the
+    /// same meeting. Used for the user's alert on/off preference.
     let seriesID: String
     let title: String
     let startDate: Date
