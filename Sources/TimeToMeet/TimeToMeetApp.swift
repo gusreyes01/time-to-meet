@@ -6,6 +6,7 @@ struct TimeToMeetApp: App {
     @StateObject private var state: AppState
 
     init() {
+        ShotExporter.exportIfRequested()
         let bundleID = Bundle.main.bundleIdentifier ?? "com.alluxi.timetomeet"
         let myPID = ProcessInfo.processInfo.processIdentifier
         let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)

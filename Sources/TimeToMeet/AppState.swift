@@ -61,8 +61,21 @@ final class AppState: ObservableObject {
         let storedSelected = UserDefaults.standard.array(forKey: Keys.selectedSeriesIDs) as? [String] ?? []
         self.selectedSeriesIDs = Set(storedSelected)
 
+        // In export mode we only need to render views from injected state — skip
+        // calendar access and the timer so no TCC prompt or ticking interferes.
+        if ProcessInfo.processInfo.environment["TTM_EXPORT"] != nil { return }
+
         Task { await requestAccessAndLoad() }
         startTimer()
+
+        // Screenshot/QA affordance: launch with TTM_PREVIEW=overlay to auto-show
+        // the preview alert (used for capturing store screenshots).
+        if ProcessInfo.processInfo.environment["TTM_PREVIEW"] == "overlay" {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 700_000_000)
+                self.previewAlert()
+            }
+        }
     }
 
     var nextMeeting: MeetingInfo? {
