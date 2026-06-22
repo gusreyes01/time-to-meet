@@ -2,12 +2,15 @@ import SwiftUI
 
 struct MenuBarView: View {
     @EnvironmentObject var state: AppState
+    var showsInlineSettings = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
-            Divider().overlay(Color.white.opacity(0.08))
-            settings
+            if showsInlineSettings {
+                Divider().overlay(Color.white.opacity(0.08))
+                settings
+            }
             if !state.meetings.isEmpty {
                 Divider().overlay(Color.white.opacity(0.08))
                 attendingBanner

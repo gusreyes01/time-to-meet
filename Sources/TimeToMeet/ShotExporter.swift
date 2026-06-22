@@ -35,7 +35,7 @@ enum ShotExporter {
         menuState.meetings = meetings
         menuState.setSelected(meetings[0], true)
         menuState.setSelected(meetings[1], true)
-        render(MenuBarView().environmentObject(menuState),
+        render(MenuBarView(showsInlineSettings: false).environmentObject(menuState),
                size: nil, scale: 2,
                to: base.appendingPathComponent("popover.png"))
 
