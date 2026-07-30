@@ -24,17 +24,3 @@ enum Brand {
         startPoint: .top, endPoint: .bottom
     )
 }
-
-/// Human-readable platform name for a meeting join link.
-enum MeetingPlatform {
-    static func name(for url: URL?) -> String? {
-        guard let host = url?.host?.lowercased() else { return nil }
-        if host.contains("zoom.us") { return "Zoom" }
-        if host.contains("meet.google.com") { return "Google Meet" }
-        if host.contains("teams.microsoft") || host.contains("teams.live") { return "Teams" }
-        if host.contains("webex.com") { return "Webex" }
-        if host.contains("whereby.com") { return "Whereby" }
-        if host.contains("around.co") { return "Around" }
-        return nil
-    }
-}

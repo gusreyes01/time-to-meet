@@ -12,6 +12,17 @@ settings:
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
 targets:
+  MeetingCore:
+    type: framework
+    platform: macOS
+    deploymentTarget: "13.0"
+    sources:
+      - path: Sources/MeetingCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.alluxi.timetomeet.meetingcore
+        DEFINES_MODULE: YES
+        SKIP_INSTALL: YES
   TimeToMeet:
     type: application
     platform: macOS
@@ -20,6 +31,8 @@ targets:
       - path: Sources/TimeToMeet
       - path: Resources/AppIcon.icns
         buildPhase: resources
+    dependencies:
+      - target: MeetingCore
     settings:
       base:
         PRODUCT_NAME: "Time to Meet"
